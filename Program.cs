@@ -14,51 +14,49 @@ namespace JagRemap
         };
 
         private static List<KeyCode> modifiersDown;
-            private static Dictionary<KeyCode, (KeyPressAction, Dictionary<KeyCode, List<KeyCode>>)> modifierMaps = 
+        private static Dictionary<KeyCode, (KeyPressAction, Dictionary<KeyCode, List<KeyCode>>)> modifierMaps = 
             new Dictionary<KeyCode, (KeyPressAction, Dictionary<KeyCode, List<KeyCode>>)>() {
                 {
                     KeyCode.VcCapsLock, (
                         KeyPressAction.Suppress,
                         new Dictionary<KeyCode, List<KeyCode>>() {
-                                { KeyCode.VcQ, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc1 } },
-                                { KeyCode.VcW, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc2 } },
-                                { KeyCode.VcE, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc3 } },
-                                { KeyCode.VcR, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc4 } },
-                                { KeyCode.VcT, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc5 } },
-                                { KeyCode.VcY, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc6 } },
-                                { KeyCode.VcU, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc7 } },
-                                { KeyCode.VcI, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc8 } },
-                                { KeyCode.VcO, new List<KeyCode>() { KeyCode.VcMinus } },
-                                { KeyCode.VcP, new List<KeyCode>() { KeyCode.VcEquals } },
+                            { KeyCode.VcQ, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc1 } },
+                            { KeyCode.VcW, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc2 } },
+                            { KeyCode.VcE, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc3 } },
+                            { KeyCode.VcR, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc4 } },
+                            { KeyCode.VcT, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc5 } },
+                            { KeyCode.VcY, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc6 } },
+                            { KeyCode.VcU, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc7 } },
+                            { KeyCode.VcI, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc8 } },
+                            { KeyCode.VcO, new List<KeyCode>() { KeyCode.VcMinus } },
+                            { KeyCode.VcP, new List<KeyCode>() { KeyCode.VcEquals } },
 
-                                { KeyCode.VcA, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcComma } },
-                                { KeyCode.VcS, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcOpenBracket } },
-                                { KeyCode.VcD, new List<KeyCode>() { KeyCode.VcOpenBracket } },
-                                { KeyCode.VcF, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc9 } },
-                                { KeyCode.VcG, new List<KeyCode>() { KeyCode.VcSlash } },
-                                { KeyCode.VcH, new List<KeyCode>() { KeyCode.VcBackSlash } },
-                                { KeyCode.VcJ, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc0 } },
-                                { KeyCode.VcK, new List<KeyCode>() { KeyCode.VcCloseBracket } },
-                                { KeyCode.VcL, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcCloseBracket } },
-                                { KeyCode.VcSemicolon, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcPeriod } },
+                            { KeyCode.VcA, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcComma } },
+                            { KeyCode.VcS, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcOpenBracket } },
+                            { KeyCode.VcD, new List<KeyCode>() { KeyCode.VcOpenBracket } },
+                            { KeyCode.VcF, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc9 } },
+                            { KeyCode.VcG, new List<KeyCode>() { KeyCode.VcSlash } },
+                            { KeyCode.VcH, new List<KeyCode>() { KeyCode.VcBackSlash } },
+                            { KeyCode.VcJ, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc0 } },
+                            { KeyCode.VcK, new List<KeyCode>() { KeyCode.VcCloseBracket } },
+                            { KeyCode.VcL, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcCloseBracket } },
+                            { KeyCode.VcSemicolon, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcPeriod } },
 
-                                { KeyCode.VcV, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcBackSlash } },
-                                { KeyCode.VcB, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcMinus } },
-                                { KeyCode.VcN, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcEquals } },
+                            { KeyCode.VcV, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcBackSlash } },
+                            { KeyCode.VcB, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcMinus } },
+                            { KeyCode.VcN, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcEquals } },
 
-								{ KeyCode.VcEquals, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcSemicolon, KeyCode.VcRightShift, KeyCode.VcEquals }}
+                            { KeyCode.VcEquals, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcSemicolon, KeyCode.VcRightShift, KeyCode.VcEquals }}
                         }
-
                     )
                 },
                 {
                     KeyCode.VcLeftControl, (
                         KeyPressAction.DontSuppress,
                         new Dictionary<KeyCode, List<KeyCode>>() {
-                                { KeyCode.VcBackspace, new List<KeyCode>() { KeyCode.VcLeftShift, KeyCode.VcNumLock, KeyCode.VcNumLock, KeyCode.VcLeft, KeyCode.VcNumLock, KeyCode.VcNumLock, KeyCode.VcLeftShift, KeyCode.VcBackspace } },
-                                { KeyCode.VcDelete, new List<KeyCode>() { KeyCode.VcLeftShift, KeyCode.VcNumLock, KeyCode.VcNumLock, KeyCode.VcRight, KeyCode.VcNumLock, KeyCode.VcNumLock, KeyCode.VcLeftShift, KeyCode.VcBackspace } },
+                            { KeyCode.VcBackspace, new List<KeyCode>() { KeyCode.VcLeftShift, KeyCode.VcNumLock, KeyCode.VcNumLock, KeyCode.VcLeft, KeyCode.VcNumLock, KeyCode.VcNumLock, KeyCode.VcLeftShift, KeyCode.VcBackspace } },
+                            { KeyCode.VcDelete, new List<KeyCode>() { KeyCode.VcLeftShift, KeyCode.VcNumLock, KeyCode.VcNumLock, KeyCode.VcRight, KeyCode.VcNumLock, KeyCode.VcNumLock, KeyCode.VcLeftShift, KeyCode.VcBackspace } },
                         }
-
                     )
                 }
             };
@@ -162,18 +160,18 @@ namespace JagRemap
             SimulatedPress = true;
 
             keys.ForEach(key =>
-            {
-                if (simulatedKeysDown.Contains(key))
                 {
-                    simulatedKeysDown.Remove(key);
-                    eventSimulator.SimulateKeyRelease(key);
-                }
-                else
-                {
-                    simulatedKeysDown.Add(key);
-                    eventSimulator.SimulateKeyPress(key);
-                }
-            });
+                    if (simulatedKeysDown.Contains(key))
+                    {
+                        simulatedKeysDown.Remove(key);
+                        eventSimulator.SimulateKeyRelease(key);
+                    }
+                    else
+                    {
+                        simulatedKeysDown.Add(key);
+                        eventSimulator.SimulateKeyPress(key);
+                    }
+                });
             simulatedKeysDown.ForEach(key => eventSimulator.SimulateKeyRelease(key));
             simulatedKeysDown.Clear();
 
