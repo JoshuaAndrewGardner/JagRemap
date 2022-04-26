@@ -124,7 +124,6 @@ namespace JagRemap
             }
 
             KeyCode currentKey = e.Data.KeyCode;
-            Console.WriteLine((int)currentKey);
             modifiersDown.AddRange(modifierKeys.Where(key => key == currentKey && !modifiersDown.Contains(key)));
 
 
