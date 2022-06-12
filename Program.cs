@@ -13,12 +13,11 @@ namespace JagRemap
             Suppress, DontSuppress
         };
 
-        private static List<KeyCode> modifiersDown;
-        private static Dictionary<KeyCode, (KeyPressAction, Dictionary<KeyCode, List<KeyCode>>)> modifierMaps = 
-            new Dictionary<KeyCode, (KeyPressAction, Dictionary<KeyCode, List<KeyCode>>)>() {
+        private static HashSet<KeyCode> modifiersDown;
+        private static Dictionary<KeyCode, Dictionary<KeyCode, List<KeyCode>>> modifierMaps =
+            new Dictionary<KeyCode, Dictionary<KeyCode, List<KeyCode>>>() {
                 {
-                    KeyCode.VcCapsLock, (
-                        KeyPressAction.Suppress,
+                    KeyCode.VcCapsLock,
                         new Dictionary<KeyCode, List<KeyCode>>() {
                             { KeyCode.VcQ, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc1 } },
                             { KeyCode.VcW, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.Vc2 } },
@@ -48,21 +47,19 @@ namespace JagRemap
 
                             { KeyCode.VcEquals, new List<KeyCode>() { KeyCode.VcRightShift, KeyCode.VcSemicolon, KeyCode.VcRightShift, KeyCode.VcEquals }}
                         }
-                    )
                 },
                 {
-                    KeyCode.VcLeftControl, (
-                        KeyPressAction.DontSuppress,
+                    KeyCode.VcLeftControl,
                         new Dictionary<KeyCode, List<KeyCode>>() {
-                            { KeyCode.VcBackspace, new List<KeyCode>() { KeyCode.VcLeftShift, KeyCode.VcNumLock, KeyCode.VcNumLock, KeyCode.VcLeft, KeyCode.VcNumLock, KeyCode.VcNumLock, KeyCode.VcLeftShift, KeyCode.VcBackspace } },
-                            { KeyCode.VcDelete, new List<KeyCode>() { KeyCode.VcLeftShift, KeyCode.VcNumLock, KeyCode.VcNumLock, KeyCode.VcRight, KeyCode.VcNumLock, KeyCode.VcNumLock, KeyCode.VcLeftShift, KeyCode.VcBackspace } },
+                            { KeyCode.VcBackspace, new List<KeyCode>() { KeyCode.VcLeftShift, KeyCode.VcLeftControl, KeyCode.VcLeft, KeyCode.VcLeftControl, KeyCode.VcBackspace } },
+                            { KeyCode.VcDelete, new List<KeyCode>() { KeyCode.VcLeftShift, KeyCode.VcLeftControl, KeyCode.VcRight, KeyCode.VcLeftControl, KeyCode.VcBackspace } },
                         }
-                    )
                 }
             };
+
+        private static readonly HashSet<KeyCode> suppressedModifiers = new HashSet<KeyCode> { KeyCode.VcCapsLock };
         private static readonly List<KeyCode> modifierKeys = modifierMaps.Keys.ToList();
-        private static readonly List<KeyCode> emptyList = new List<KeyCode>();
-        private static List<KeyCode> simulatedKeysDown = new List<KeyCode>();
+        private static readonly HashSet<KeyCode> numLockToggleKeys = new HashSet<KeyCode> { KeyCode.VcLeft, KeyCode.VcRight, KeyCode.VcUp, KeyCode.VcDown };
         private static IGlobalHook hook;
         private static EventSimulator eventSimulator;
 
@@ -70,11 +67,10 @@ namespace JagRemap
 
         static void Main()
         {
-            modifiersDown = new List<KeyCode>();
+            modifiersDown = new HashSet<KeyCode>();
             eventSimulator = new EventSimulator();
 
-            ResetCapsLock();
-            ResetNumLock();
+            EnsureModifierState();
 
             hook = new SimpleGlobalHook();
             hook.KeyPressed += OnKeyPressed;
@@ -82,38 +78,48 @@ namespace JagRemap
             hook.Run();
         }
 
+        private static void EnsureModifierState()
+        {
+            SimulatedPress = true;
+            ResetCapsLock();
+            ResetNumLock();
+            SimulatedPress = false;
+        }
+
         private static void ResetCapsLock()
         {
             if (Console.CapsLock)
             {
-                SimulateKeyPresses(new List<KeyCode>() { KeyCode.VcCapsLock });
+                eventSimulator.SimulateKeyPress(KeyCode.VcCapsLock);
+                eventSimulator.SimulateKeyRelease(KeyCode.VcCapsLock);
             }
         }
 
-        private static void ResetNumLock()
+        private static void ResetNumLock(bool active = false)
         {
-            if (!Console.NumberLock)
+            if (Console.NumberLock == active)
             {
-                SimulateKeyPresses(new List<KeyCode>() { KeyCode.VcNumLock });
+                eventSimulator.SimulateKeyPress(KeyCode.VcNumLock);
+                eventSimulator.SimulateKeyRelease(KeyCode.VcNumLock);
             }
         }
 
-        private static List<KeyCode> GetKeyMap(KeyCode key)
+        private static bool IsKeyCurrentlyModified(KeyCode keyCode)
         {
-            return modifierMaps
-                .Where(entry => modifiersDown.Contains(entry.Key) && entry.Value.Item2.Keys.ToList().Contains(key))
-                .Select(entry => entry.Value.Item2[key])
-                .DefaultIfEmpty(emptyList)
+            return modifiersDown
+                .Any(modifier => modifierMaps[modifier].Keys.Contains(keyCode));
+        }
+
+        private static KeyCode GetModifyingKey(KeyCode keyCode)
+        {
+            return modifiersDown
+                .Where(modifier => modifierMaps[modifier].Keys.Contains(keyCode))
                 .First();
         }
 
-        private static bool SuppressModifierKey(KeyCode key)
+        private static List<KeyCode> GetKeyMap(KeyCode key, KeyCode modifyingKey)
         {
-            return modifierMaps
-                .Where(entry => entry.Key == key)
-                .Select(map => map.Value.Item1 == KeyPressAction.Suppress)
-                .DefaultIfEmpty(false)
-                .First();
+            return modifierMaps[modifyingKey][key];
         }
 
         private static void OnKeyPressed(object sender, KeyboardHookEventArgs e)
@@ -123,24 +129,30 @@ namespace JagRemap
                 return;
             }
 
-            KeyCode currentKey = e.Data.KeyCode;
-            modifiersDown.AddRange(modifierKeys.Where(key => key == currentKey && !modifiersDown.Contains(key)));
-
-
-            if (SuppressModifierKey(currentKey))
+            KeyCode currentKeyCode = e.Data.KeyCode;
+            if (modifierKeys.Contains(currentKeyCode))
             {
-                e.Reserved = EventReservedValueMask.SuppressEvent;
+                modifiersDown.Add(currentKeyCode);
+                if (suppressedModifiers.Contains(currentKeyCode))
+                {
+                    e.Reserved = EventReservedValueMask.SuppressEvent;
+                }
+                EnsureModifierState();
                 return;
             }
 
-            List<KeyCode> mappedKeys = GetKeyMap(currentKey);
-            if (mappedKeys.Count == 0)
+            if (modifiersDown.Count == 0)
+            {
+                return;
+            }
+
+            if (!IsKeyCurrentlyModified(currentKeyCode))
             {
                 return;
             }
 
             e.Reserved = EventReservedValueMask.SuppressEvent;
-            SimulateKeyPresses(mappedKeys);
+            SimulateKeyModification(currentKeyCode);
         }
 
         private static void OnKeyReleased(object sender, KeyboardHookEventArgs e)
@@ -150,30 +162,61 @@ namespace JagRemap
                 return;
             }
 
-            KeyCode currentKey = e.Data.KeyCode;
-            modifiersDown.RemoveAll(key => key == currentKey);
+            KeyCode currentKeyCode = e.Data.KeyCode;
+            modifiersDown.Remove(currentKeyCode);
         }
 
-        private static void SimulateKeyPresses(List<KeyCode> keys)
+        private static void SimulateKeyToggle(Dictionary<KeyCode, bool> simulatedKeysDown, KeyCode key)
+        {
+            if (!simulatedKeysDown.ContainsKey(key))
+            {
+                simulatedKeysDown.Add(key, false);
+            }
+
+            if (!simulatedKeysDown[key])
+            {
+                eventSimulator.SimulateKeyPress(key);
+            }
+            else
+            {
+                eventSimulator.SimulateKeyRelease(key);
+            }
+
+            simulatedKeysDown[key] = !simulatedKeysDown[key];
+        }
+
+        private static void SimulateKeyModification(KeyCode key)
         {
             SimulatedPress = true;
+            KeyCode modifier = GetModifyingKey(key);
+            List<KeyCode> modifiedKeyPresses = GetKeyMap(key, modifier);
+            Dictionary<KeyCode, bool> simulatedKeysDown = new Dictionary<KeyCode, bool>();
+            if (!suppressedModifiers.Contains(modifier))
+            {
+                eventSimulator.SimulateKeyRelease(modifier);
+            }
+            if (modifiedKeyPresses.Any(key => numLockToggleKeys.Contains(key)))
+            {
+                ResetNumLock(true);
+            }
 
-            keys.ForEach(key =>
-                {
-                    if (simulatedKeysDown.Contains(key))
-                    {
-                        simulatedKeysDown.Remove(key);
-                        eventSimulator.SimulateKeyRelease(key);
-                    }
-                    else
-                    {
-                        simulatedKeysDown.Add(key);
-                        eventSimulator.SimulateKeyPress(key);
-                    }
-                });
-            simulatedKeysDown.ForEach(key => eventSimulator.SimulateKeyRelease(key));
-            simulatedKeysDown.Clear();
+            modifiedKeyPresses.ForEach(key =>
+            {
+                SimulateKeyToggle(simulatedKeysDown, key);
+            });
+            simulatedKeysDown
+                .Where(record => record.Value)
+                .ToList()
+                .ForEach(record => SimulateKeyToggle(simulatedKeysDown, record.Key));
 
+            if (modifiedKeyPresses.Any(key => numLockToggleKeys.Contains(key)))
+            {
+                ResetNumLock();
+            }
+            if (!suppressedModifiers.Contains(modifier))
+            {
+                eventSimulator.SimulateKeyPress(modifier);
+            }
             SimulatedPress = false;
         }
     }
